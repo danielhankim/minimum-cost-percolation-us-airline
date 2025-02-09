@@ -1,0 +1,11 @@
+.ipynb_checkpoints
+data/*
+notebooks/.ipynb_checkpoints
+notebooks/old*
+notebooks/dev*
+results
+*.png
+*.pdf
+*.csv
+__pycache__
+*egg-info*
