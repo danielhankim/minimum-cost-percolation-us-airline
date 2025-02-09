@@ -1,0 +1,74 @@
+struct flight{    		// Structure declaration
+	int origin;       	// Member (int variable)
+  	int destination;
+  	unsigned long departure;
+  	unsigned long arrival;
+	double elapsed_time;
+  	double distance;
+  	int seats;
+};		// End the structure with a semicolon
+
+struct network{
+	int total_seats;
+	int total_flights;
+	int total_airports;
+	int **edges; /* edges[origin][k] = origin's k-th destination */
+	int **origin_airports;
+	int **back_edges; /* back_edges[destination][k] = dest's k-th origin */
+	int **destination_airports;
+};
+
+struct demand{
+	int total;  /* total number of passengers */
+	int effective_total;
+	int elements;  /* total number of OD elements*/
+	int effective_elements;
+	int **idx;  /* to save OD */
+	int *size; /* to save number of passengers */
+	int *vector;  /* to save the index of origin-destination-passengers */
+	struct node** bst;  /*  to save binary search trees (BSTs) for each OD pair... but why? */
+	int *tmp_vector;
+	int *buffer;
+};
+
+
+
+struct node {
+	int key;
+	struct node *left, *right;
+};
+
+
+typedef struct heapNode {
+	double value;
+	int node_index;
+} heapNode;
+
+typedef struct PQ {
+	heapNode* heap;
+	int size;
+} PQ;
+
+
+struct d_search{
+	int N;
+	PQ heap_distance;
+	int *found;
+	int *visited;
+	int **previous;
+	int **next;
+	double *cost;
+	int *reset;
+	double *score;
+	double *tmp_score;
+};
+
+
+struct result{
+	int idx;
+	int total;
+	double *demanded_pairs;
+	int **paths;
+	int *remaining_seats;
+	double **cost;
+};

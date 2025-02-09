@@ -1,0 +1,12 @@
+int random_geometric (double prob_succ);
+void clean_demand (struct demand *D, struct d_search *S, struct flight *F, struct network *G);
+void reset_variables (struct d_search *S);
+int single_step_percolation_model (int origin, int destination, struct d_search *S, struct flight *F, struct network *G, struct demand *D, struct result *R, int cost_type);
+void reserve_itinerary (struct d_search *S, struct flight *F, struct network *G);
+void remove_flight_from_network (struct network *G, struct flight *F, int f);
+void extract_random_path (struct d_search *S);
+void compute_probability_paths (struct d_search *S, struct network *G, int origin);
+void dijikstra_find_mincost_path (int origin, int destination, struct network *G, struct flight *F, struct d_search *S,int cost_type);
+void allocate_memory_search (struct d_search *S, struct network *G);
+void deallocate_memory_search (struct d_search *S);
+void minimum_cost_percolation_function (struct demand* D, struct network* G, struct flight* F, struct d_search *S, struct result *R, int cost_type);
