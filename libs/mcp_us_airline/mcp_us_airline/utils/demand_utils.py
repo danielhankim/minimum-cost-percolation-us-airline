@@ -33,7 +33,7 @@ def create_OD_matrix_from_itineraries(db1b_df, super_airport_mapper):
 
     Note that there are other ways to generate the OD matrix, e.g., using the gravity model.
     '''
-    outlier = utils.get_outlier_airports()  # airports outside of the contiguous US territory
+    outlier = get_outlier_airports()  # airports outside of the contiguous US territory
     unique_markets = db1b_df['MktID'].unique()
     markets = {}
 
