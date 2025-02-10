@@ -20,12 +20,11 @@ def write_list_of_flights_to_file(file_name, flights, airports):
         fp.write(tmp + '\n')
     fp.close()
 
-def write_supplied_demand_to_file(file_name, OD_demand, airports):
-    aggregated_OD_demand = aggregate_demand(OD_demand, airports)
+def write_supplied_demand_to_file(file_name, OD_demand):
     
     fp = open(file_name, 'w')
-    for (origin, destination) in aggregated_OD_demand:
-        tmp = str(origin) + ' ' + str(destination) + ' ' + str(int(aggregated_OD_demand[(origin, destination)]))
+    for (origin, destination) in OD_demand:
+        tmp = str(origin) + ' ' + str(destination) + ' ' + str(int(OD_demand[(origin, destination)]))
         fp.write(tmp + '\n')
     fp.close()
 

@@ -5,14 +5,14 @@ from tqdm import tqdm
 import timezonefinder
 import pytz
 from .time_utils import convert_to_datetime
-from .constants import ONTIME_DIR
+from .constants import *
 from .airport_utils import read_airports_coordinates, get_outlier_airports
 
 def build_seats_df(year):
-    aircraft_df = pd.read_csv(f'../data/raw/aircraft/aircraft_{year}.txt', sep=',')
+    aircraft_df = pd.read_csv(f'{AIRCRAFT_DIR}/aircraft_{year}.txt', sep=',')
     aircraft_df = aircraft_df.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
 
-    master_df = pd.read_csv(f'../data/raw/aircraft/master_{year}.txt', sep=',')
+    master_df = pd.read_csv(f'{AIRCRAFT_DIR}/master_{year}.txt', sep=',')
     master_df = master_df.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
     master_df['N-NUMBER'] = master_df['N-NUMBER'].apply(lambda x: 'N' + x)
 
@@ -24,7 +24,6 @@ def build_seats_df(year):
     seats_df = seats_df[["N-NUMBER", "MFR MDL CODE", "CODE", "NO-SEATS"]]
 
     return seats_df
-
 
 
 

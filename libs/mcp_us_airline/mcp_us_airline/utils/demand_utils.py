@@ -14,7 +14,19 @@ def sort_flight_legs(flight):
     list1, list2 = zip(*sorted(zip(list1, list2)))
     return list2 
 
-def create_OD_matrix_from_itineraries(db1b_df, super_airport_mapper):
+def aggregate_demand(OD_demand, mapper):
+    aggregated_OD_demand = {}
+    for (origin, destination) in tqdm(OD_demand):
+        if origin not in mapper:
+            continue
+        if destination not in mapper:
+            continue
+        if (mapper[origin], mapper[destination]) not in aggregated_OD_demand:
+            aggregated_OD_demand[(mapper[origin], mapper[destination])] = 0
+        aggregated_OD_demand[(mapper[origin], mapper[destination])] += OD_demand[(origin, destination)]
+    return aggregated_OD_demand
+
+def create_OD_matrix_from_itineraries(db1b_df, super_airport_mapper, aggregate=False):
     '''
     To generate the OD matrix, we rely on the DB1B Coupon data.
     We use number of passengers in each directional market. 
@@ -76,7 +88,8 @@ def create_OD_matrix_from_itineraries(db1b_df, super_airport_mapper):
         
     print(f"these self-loops are discarded from the OD matrix: {self_loop_dict}")
     
-        
+    if aggregate:
+        demand = aggregate_demand(demand, super_airport_mapper)
 
     return demand
 
@@ -112,15 +125,5 @@ def make_gravity_model_demand(distances_df, cluster_population, minimum_distance
     return demand_df
 
 
-def aggregate_demand(OD_demand, mapper):
-    aggregated_OD_demand = {}
-    for (origin, destination) in tqdm(OD_demand):
-        if origin not in mapper:
-            continue
-        if destination not in mapper:
-            continue
-        if (mapper[origin], mapper[destination]) not in aggregated_OD_demand:
-            aggregated_OD_demand[(mapper[origin], mapper[destination])] = 0
-        aggregated_OD_demand[(mapper[origin], mapper[destination])] += OD_demand[(origin, destination)]
-    return aggregated_OD_demand
+
 
