@@ -81,11 +81,7 @@ def write_gravity_demand_to_file(file_name, gravity_demand):
     
     fp.close()
 
-def write_flight_connection_network_to_file(file_name, flight_connection_network, share=False):
-    if share:
-        file_name += '_share'
-    file_name += '.dat'
-
+def write_flight_connection_network_to_file(file_name, flight_connection_network):
     fp = open(file_name, 'w')
     for f in flight_connection_network:
         for g in flight_connection_network[f]:
