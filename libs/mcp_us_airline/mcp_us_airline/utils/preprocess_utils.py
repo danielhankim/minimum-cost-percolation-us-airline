@@ -4,9 +4,38 @@ import geopy.distance
 from tqdm import tqdm
 import timezonefinder
 import pytz
-from .time_utils import convert_to_datetime
+from datetime import datetime
 from .constants import *
 from .airport_utils import read_airports_coordinates, get_outlier_airports
+
+
+def convert_to_datetime(row, time_col):
+    """
+    Converts separate year, month, day, and time columns into a single datetime object.
+    :param row: DataFrame row
+    :param time_col: Column name for the time (in HHMM format)
+    :return: datetime object or None if data is missing
+    """
+    # Extract the components
+    year = row['Year']
+    month = row['Month']
+    day = row['DayofMonth']
+    time_val = row[time_col]
+    
+    # Handle missing values directly
+    if pd.isnull([year, month, day, time_val]).any():
+        return None
+    
+    # Ensure time is in HHMM format, then convert it to a full datetime string
+    time_str = str(int(time_val)).zfill(4)  # Make sure time is in HHMM format
+    time_str = f"{time_str[:2]}:{time_str[2:]}:00"  # Convert to HH:MM:SS
+
+    # Combine year, month, day, and time into a single string and convert to datetime
+    date_str = f"{int(year):04d}-{int(month):02d}-{int(day):02d} {time_str}"
+    
+    # Convert to datetime object
+    return pd.to_datetime(date_str, format="%Y-%m-%d %H:%M:%S")
+
 
 def build_seats_df(year):
     aircraft_df = pd.read_csv(f'{AIRCRAFT_DIR}/aircraft_{year}.txt', sep=',')
