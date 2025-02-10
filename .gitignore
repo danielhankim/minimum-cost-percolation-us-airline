@@ -3,6 +3,7 @@ data/*
 notebooks/.ipynb_checkpoints
 notebooks/old*
 notebooks/dev*
+logs/*
 results
 *.png
 *.pdf
