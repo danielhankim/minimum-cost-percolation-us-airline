@@ -77,13 +77,13 @@ def create_simulation_config(demand_type='gravity', **kwargs):
     if demand_type == 'gravity':
         demand_file = (f'{base_paths["derived"]}/gravity_demand_pop1_{kwargs["param1"]:.1f}_'
                       f'pop2_{kwargs["param2"]:.1f}_decay_{kwargs["param3"]:.1f}_d_{kwargs["param4"]}.dat')
-        output_file = (f'{base_paths["results"]}/results_gravity_pop1_{kwargs["param1"]:.1f}_'
+        output_file = (f'{base_paths["results"]}/Y{kwargs["year"]}M{kwargs["month"]}D{kwargs["date"]}/results_gravity_pop1_{kwargs["param1"]:.1f}_'
                       f'pop2_{kwargs["param2"]:.1f}_decay_{kwargs["param3"]:.1f}_d_{kwargs["param4"]}_'
-                      f'Y{kwargs["year"]}_M{kwargs["month"]}_D{kwargs["date"]}_{kwargs["coop_type"]}_{cost_dict[cost_type]}.dat')
+                      f'{kwargs["coop_type"]}_{cost_dict[cost_type]}.dat')
     
     elif demand_type == 'db1b':
         demand_file = f'{base_paths["derived"]}/DB1B_demand_Y{kwargs["year"]}_Q{get_quarter_from_month(kwargs["month"])}.dat'
-        output_file = f'{base_paths["results"]}/results_db1b_{kwargs["coop_type"]}_{cost_dict[cost_type]}.dat'
+        output_file = f'{base_paths["results"]}/Y{kwargs["year"]}M{kwargs["month"]}D{kwargs["date"]}/results_db1b_{kwargs["coop_type"]}_{cost_dict[cost_type]}.dat'
     
     else:
         raise ValueError(f"Unknown demand type: {demand_type}")
@@ -103,51 +103,22 @@ def run_simulation(config):
     output_file = config['output_file']
     cost_type = config['cost_type']
 
-    start_time = time.time()
-    process = psutil.Process()
-    max_memory = 0
-    
+    start_time = time.time()  # Track start time
+
     try:
         cmd = ['./min_cost_percolation.out', demand_file, flight_file, network_file, output_file, str(cost_type)]
-
-        # Print command for debugging
-        print(f"Executing command: {' '.join(cmd)}")
-        print(f"Working directory: {os.getcwd()}")
-
-        # Verify input files exist
-        for file in [demand_file, flight_file, network_file]:
-            if not os.path.exists(file):
-                raise FileNotFoundError(f"Input file not found: {file}")
-            
-        # Verify output directory exists
-        output_dir = os.path.dirname(output_file)
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir, exist_ok=True)
-
-        proc = subprocess.Popen(
-            cmd,
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
+        print(f"Executing: {' '.join(cmd)}")
+        
+        # Use shell=True to execute exactly as command line
+        result = subprocess.run(
+            ' '.join(cmd),  # Join command into a single string
+            shell=True,     # Use shell to execute
+            check=True,     # Raise exception on error
+            # capture_output=True,
+            # text=True
         )
 
-        while proc.poll() is None:
-            memory_info = process.memory_info()
-            max_memory = max(max_memory, memory_info.rss / 1024 / 1024 / 1024)  # convert go GB
-            time.sleep(1)
-
-        stdout, stderr = proc.communicate()
-
-        
-        if proc.returncode != 0:
-            raise Exception(
-                f"Simulation failed with return code {proc.returncode}\n"
-                f"Command: {' '.join(cmd)}\n"
-                f"STDOUT: {stdout}\n"
-                f"STDERR: {stderr}"
-            )
-
-        end_time = time.time()
+        end_time = time.time()  # Track end time
         duration = end_time - start_time
         
         return {
@@ -156,42 +127,43 @@ def run_simulation(config):
             'network': network_file,
             'cost_type': cost_type,
             'duration': duration,
-            'max_memory': max_memory,
             'status': 'success'
         }
         
     except subprocess.CalledProcessError as e:
         end_time = time.time()
         duration = end_time - start_time
-        
+        print(f"Command failed with return code {e.returncode}")
+        print(f"STDOUT: {e.stdout}")
+        print(f"STDERR: {e.stderr}")
         return {
             'demand': demand_file,
             'flight': flight_file,
             'network': network_file,
             'cost_type': cost_type,
             'duration': duration,
-            'max_memory': max_memory,
             'status': 'error',
             'error_msg': str(e)
         }
 
-def write_log(log_file, result):
-    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    status = result['status']
-    duration = result['duration']
-    demand = result['demand']
-    flight = result['flight']
-    network = result['network']
-    cost_type = result['cost_type']
-    max_memory = result['max_memory']
+
+
+# def write_log(log_file, result):
+#     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+#     status = result['status']
+#     duration = result['duration']
+#     demand = result['demand']
+#     flight = result['flight']
+#     network = result['network']
+#     cost_type = result['cost_type']
     
-    log_entry = f"{timestamp} | {demand} | {flight} | {network} | {cost_type} | {duration:8.2f}s | {max_memory:8.2f}GB | {status}"
+#     log_entry = f"{timestamp} | {demand} | {flight} | {network} | {cost_type} | {duration:8.2f}s | {status}"
     
-    if status == 'error':
-        log_entry += f" | Error: {result['error_msg']}"
+#     if status == 'error':
+#         log_entry += f" | Error: {result['error_msg']}"
     
-    with open(log_file, 'a') as f:
-        f.write(log_entry + '\n')
+#     with open(log_file, 'a') as f:
+#         f.write(log_entry + '\n')
         
 def main():
     args = parse_args()
@@ -205,12 +177,11 @@ def main():
     os.makedirs(log_dir, exist_ok=True)
     
     # Create log file with timestamp
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    log_file = os.path.join(log_dir, f'simulation_log_{timestamp}.txt')
+    log_file = os.path.join(log_dir, f'simulation_log.txt')
     
     # Write header to log file
-    with open(log_file, 'w') as f:
-        f.write("timestamp | demand | flight | network | cost_type | duration | max_memory | status\n")
+    with open(log_file, 'a') as f:
+        f.write("timestamp | demand | flight | network | cost_type | duration | status\n")
         f.write("-" * 100 + "\n")
 
     if args.demand_type == 'gravity':
@@ -221,7 +192,7 @@ def main():
         config = create_simulation_config(**vars(args))
     
     results = run_simulation(config)
-    write_log(log_file, results)
+    # write_log(log_file, results)
     
 
 if __name__ == "__main__":
