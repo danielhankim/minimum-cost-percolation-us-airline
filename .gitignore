@@ -1,5 +1,6 @@
 .ipynb_checkpoints
 data/*
+results/*
 notebooks/.ipynb_checkpoints
 notebooks/old*
 notebooks/dev*
