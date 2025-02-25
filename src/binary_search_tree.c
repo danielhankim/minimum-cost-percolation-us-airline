@@ -101,7 +101,7 @@ void free_tree(struct node *root){
 
 
 // Inorder Traversal                                                                              
-void tree_to_array (struct node *root, int *array) {
+void tree_to_array (struct node *root, unsigned long long *array) {
 	if (root != NULL) {
 		// Traverse left
 

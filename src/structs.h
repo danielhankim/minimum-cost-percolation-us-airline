@@ -19,16 +19,16 @@ struct network{
 };
 
 struct demand{
-	int total;  /* total number of passengers */
-	int effective_total;
-	int elements;  /* total number of OD elements*/
-	int effective_elements;
-	int **idx;  /* to save OD */
-	int *size; /* to save number of passengers */
-	int *vector;  /* to save the index of origin-destination-passengers */
+	unsigned long long total;  /* total number of passengers */
+	unsigned long long effective_total;
+	unsigned long long elements;  /* total number of OD elements*/
+	unsigned long long effective_elements;
+	unsigned long long **idx;  /* to save OD */
+	unsigned long long *size; /* to save number of passengers */
+	unsigned long long *vector;  /* to save the index of origin-destination-passengers */
 	struct node** bst;  /*  to save binary search trees (BSTs) for each OD pair... but why? */
-	int *tmp_vector;
-	int *buffer;
+	unsigned long long *tmp_vector;
+	unsigned long long *buffer;
 };
 
 

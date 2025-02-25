@@ -59,11 +59,11 @@ void deallocate_results (struct result *R) {
 //////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////
 
-void randomize_vector (int *vector) {
-	int i, j, t;
+void randomize_vector (unsigned long long *vector) {
+	unsigned long long i, j, t;
 	for(i = 1; i <= vector[0]; i++) {
 		t = vector[i];
-		j = (int)(genrand64_real3()*vector[0]) + 1;
+		j = (unsigned long long)(genrand64_real3()*vector[0]) + 1;
 		if (j > vector[0]) {j = 1;}
 		vector[i] = vector[j];
 		vector[j] = t;
@@ -210,7 +210,8 @@ void read_network (char *filename, struct network *G) {
 
 
 void generate_origin_airports (struct flight *F, struct network *G, struct demand *D) {
-	int i, a, q;
+	int i, a;
+	unsigned long long q;
 	int NF = F[0].origin;
 	int NA = 0;  /* largest airport index */
 
@@ -300,7 +301,7 @@ void deallocate_memory_network (struct network* G) {
 void read_demand_matrix (char *filename, struct demand* D) {
 	FILE *f;
 	int i, j, d, q, s;
-	int total_passengers = 0;  /* total number of passengers*/
+	unsigned long long total_passengers = 0;  /* total number of passengers*/
 	int total_OD_elements = 0;  /* totla number of OD elements*/
 	
 	/* read the demand file */
@@ -319,23 +320,23 @@ void read_demand_matrix (char *filename, struct demand* D) {
 	exit_file:
 	fclose(f);
 
-	printf("# Total passengers %d\n",total_passengers);
+	printf("# Total passengers %lld\n",total_passengers);
 	printf("# Total o/d elements %d\n",total_OD_elements); 
 	////////////
 
 	/* allocate memories */	
-	D->idx = (int **)malloc(2*sizeof(int *));
-	D->idx[0] = (int *)malloc((total_OD_elements+1)*sizeof(int));  /* origin */
-	D->idx[1] = (int *)malloc((total_OD_elements+1)*sizeof(int));  /* destination */
-	D->size = (int *)calloc(total_OD_elements+1, sizeof(int));  /* number of passengers */
-	D->vector = (int *)malloc((total_passengers+1)*sizeof(int));  /* index of origin-destination-passengers */
+	D->idx = (unsigned long long **)malloc(2*sizeof(unsigned long long *));
+	D->idx[0] = (unsigned long long *)malloc((total_OD_elements+1)*sizeof(unsigned long long));  /* origin */
+	D->idx[1] = (unsigned long long *)malloc((total_OD_elements+1)*sizeof(unsigned long long));  /* destination */
+	D->size = (unsigned long long *)calloc(total_OD_elements+1, sizeof(unsigned long long));  /* number of passengers */
+	D->vector = (unsigned long long *)malloc((total_passengers+1)*sizeof(unsigned long long));  /* index of origin-destination-passengers */
 	D->vector[0] = 0;  /* index count */
 	D->total = total_passengers;
 	D->elements = total_OD_elements;
 	D->bst = (struct node**)malloc((total_OD_elements+1)*sizeof(struct node*));  /* array of binary search trees (BSTs) */
 	for(i = 0; i <= total_OD_elements; i++) D->bst[i] = NULL;
-	D->tmp_vector = (int *)malloc((total_passengers+1)*sizeof(int));
-	D->buffer = (int *)malloc((total_passengers+1)*sizeof(int));
+	D->tmp_vector = (unsigned long long *)malloc((total_passengers+1)*sizeof(unsigned long long));
+	D->buffer = (unsigned long long *)malloc((total_passengers+1)*sizeof(unsigned long long));
 	////////////
 
 
@@ -375,7 +376,7 @@ fclose(f);
 
 
 void deallocate_memory_demand (struct demand* D) {
-	int q;
+	unsigned long long q;
 	for (q = 0; q <= D->elements; q++) {free_tree(D->bst[q]);}
 	free(D->bst);
 	free(D->idx[0]);
@@ -390,9 +391,10 @@ void deallocate_memory_demand (struct demand* D) {
 
 
 
-void remove_pair_from_demand(int q, struct demand* D) {
+void remove_pair_from_demand(unsigned long long q, struct demand* D) {
 
-	int i, pos_q, r, pos_r, start_pos, count;
+	unsigned long long i, pos_q, r, pos_r, start_pos, count;
+
 	//printf("# Removing pair %d :  %d %d\n",q, D->idx[0][q], D->idx[1][q]);
 	//printf("# Remaining passengers %d\n",D->vector[0]);
 	fflush(stdout);

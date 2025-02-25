@@ -36,7 +36,7 @@ void clean_demand (struct demand *D, struct d_search *S, struct flight *F, struc
 	The effective number of available origin-destinatino pairs are 
 	save at "D->effective_elements".	
 	*/
-	int q, o, d;
+	unsigned long long q, o, d;
 	D->effective_elements = D->elements;
 	D->effective_total = D->total;
 	for(q = 1; q <= D->elements; q++) {
@@ -500,7 +500,8 @@ void deallocate_memory_search (struct d_search *S) {
 ////////////////////////////
 void minimum_cost_percolation_function (struct demand* D, struct network* G, struct flight* F, struct d_search *S, struct result *R, int cost_type) {
 
-	int i, p, q, Q, Qeff, P, Peff, origin, destination, res;
+	int i, p, origin, destination;
+	unsigned long long q, Q, Qeff, P, Peff, res;
 
 	/////
 	G->total_seats = 0;
@@ -535,7 +536,7 @@ void minimum_cost_percolation_function (struct demand* D, struct network* G, str
 		
 		/* if the flight connection network cannot provide an itinerary connecting origin->destination, */
 		/* we remove the origin-destination pair from the demand */
-		if (res ==0) {  
+		if (res == 0) {  
 			remove_pair_from_demand(q, D);
 			Q -= 1;
 			Qeff -=1;
