@@ -2,15 +2,24 @@
 
 from tqdm import tqdm
 import numpy as np
+import pandas as pd
+from itertools import product
 from .airport_utils import get_outlier_airports
 
 
 def sort_flight_legs(flight):
-    
     list1, list2 = [], []
     for i in range(0, len(flight)):
         list1.append(flight[i][3])  # sequence of flight
         list2.append([flight[i][0], flight[i][1], flight[i][2], flight[i][3]])  # Origin Destination Passengers Sequence
+    list1, list2 = zip(*sorted(zip(list1, list2)))
+    return list2 
+
+def sort_flight_legs_v2(flight):
+    list1, list2 = [], []
+    for i in range(0, len(flight)):
+        list1.append(flight[i][3])  # sequence of flight
+        list2.append([flight[i][0], flight[i][1], flight[i][2], flight[i][3], flight[i][4]])  # Origin Destination Passengers Sequence Carrier
     list1, list2 = zip(*sorted(zip(list1, list2)))
     return list2 
 
@@ -21,9 +30,10 @@ def aggregate_demand(OD_demand, mapper):
             continue
         if destination not in mapper:
             continue
-        if (mapper[origin], mapper[destination]) not in aggregated_OD_demand:
-            aggregated_OD_demand[(mapper[origin], mapper[destination])] = 0
-        aggregated_OD_demand[(mapper[origin], mapper[destination])] += OD_demand[(origin, destination)]
+        if mapper[origin] != mapper[destination]:  # Only add if origin and destination are different
+            if (mapper[origin], mapper[destination]) not in aggregated_OD_demand:
+                aggregated_OD_demand[(mapper[origin], mapper[destination])] = 0
+            aggregated_OD_demand[(mapper[origin], mapper[destination])] += OD_demand[(origin, destination)]
     return aggregated_OD_demand
 
 def create_OD_matrix_from_itineraries(db1b_df, super_airport_mapper, aggregate=False):
@@ -95,10 +105,13 @@ def create_OD_matrix_from_itineraries(db1b_df, super_airport_mapper, aggregate=F
 
 
 
-def make_gravity_model_demand(distances_df, cluster_population, minimum_distance_km=300, population_exponent1=0.4, population_exponent2=0.4, decay_function="power", decay_parameter=1.0, normalize_demand=False):
+def make_gravity_model_demand(distances_df, cluster_population, minimum_distance_km=300, population_exponent1=0.4, population_exponent2=0.4, decay_function="power", decay_parameter=1.0, minimum_demand_count=None, total_demand_count=None):
     """
     This function makes the gravity model demand using the distances and population data.
     """
+
+    if minimum_demand_count is not None and total_demand_count is not None:
+        raise ValueError("minimum_demand_count and total_demand_count cannot both be provided")
 
     demand_df = distances_df.copy()
     demand_df = demand_df[demand_df['distance_km'] > minimum_distance_km]
@@ -116,14 +129,22 @@ def make_gravity_model_demand(distances_df, cluster_population, minimum_distance
     else:
         raise ValueError("Decay function must be either 'power' or 'exponential'")
     
-    if normalize_demand:
+    if minimum_demand_count:
+        # scale the demand count such that the minimum demand count equals to the set value
         min_demand = demand_df['demand'].min()
-        print(f"minimum demand: {min_demand}")
-        demand_df['demand'] = demand_df['demand'] / min_demand
+        print(f"initial minimum demand: {min_demand}")
+        demand_df['demand'] = demand_df['demand'] / min_demand * minimum_demand_count
         demand_df['demand'] = demand_df['demand'].astype('int')
+        print(f"scaled minimum demand: {demand_df['demand'].min()}")
     
+    if total_demand_count:
+        # scale the demand count such that the total demand count equals to the set value
+        tot_demand = demand_df['demand'].sum()
+        print(f"initial total demand: {tot_demand}")
+        demand_df['demand'] = demand_df['demand'] / tot_demand * total_demand_count
+        demand_df['demand'] = demand_df['demand'].astype('int')
+        print(f"scaled total demand: {demand_df['demand'].sum()}")
+        
     return demand_df
-
-
 
 

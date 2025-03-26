@@ -67,6 +67,15 @@ def read_airports_coordinates():
     coords['DTT'] = []
     coords['DTT'].append(coords['DTW'][0])
     coords['DTT'].append(coords['DTW'][1])
+
+
+    # additional corrections which are missing
+    
+    coords['BKG'] = [36.53869111490309, -93.19860083302736] # Brenson Airport, MO
+    coords['PQS'] = [62.05398628650332, -162.92334222561277]  # Pilot Station Airport, AK
+    
+
+
     
     return coords
 

@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import numpy as np
 import geopy.distance
 from tqdm import tqdm
 import timezonefinder
@@ -7,7 +8,8 @@ import pytz
 from datetime import datetime
 from .constants import *
 from .airport_utils import read_airports_coordinates, get_outlier_airports
-
+from .demand_utils import sort_flight_legs_v2
+from itertools import product
 
 def convert_to_datetime(row, time_col):
     """
@@ -173,9 +175,29 @@ def prepare_ontime_df(year, month, date, carrier, seats=True, distance_function=
         final_df = full_df[-full_df.isna().any(axis=1)]
 
     if contiguous_us:
-        outlier = get_outlier_airports()  # airports outside of the contiguous US territory
-        mask = ~final_df['Origin'].isin(outlier) & ~final_df['Dest'].isin(outlier)
-        final_df = final_df[mask]  # keep flights within contiguous US territory only
+        contiguous_us_y_bound = (-130, -60)
+        contiguous_us_x_bound = (20, 50)
+        origin_coords = final_df['Origin'].apply(lambda x: airport_coords[x])
+        dest_coords = final_df['Dest'].apply(lambda x: airport_coords[x])
+
+        origin_in_contiguous_us = (origin_coords.apply(lambda x: x[0]) > contiguous_us_x_bound[0]) & \
+                                  (origin_coords.apply(lambda x: x[0]) < contiguous_us_x_bound[1]) & \
+                                  (origin_coords.apply(lambda x: x[1]) > contiguous_us_y_bound[0]) & \
+                                  (origin_coords.apply(lambda x: x[1]) < contiguous_us_y_bound[1])
+        
+        dest_in_contiguous_us = (dest_coords.apply(lambda x: x[0]) > contiguous_us_x_bound[0]) & \
+                                (dest_coords.apply(lambda x: x[0]) < contiguous_us_x_bound[1]) & \
+                                (dest_coords.apply(lambda x: x[1]) > contiguous_us_y_bound[0]) & \
+                                (dest_coords.apply(lambda x: x[1]) < contiguous_us_y_bound[1])
+
+        # Print discarded airports
+        discarded_origins = set(final_df[~origin_in_contiguous_us]['Origin'])
+        discarded_dests = set(final_df[~dest_in_contiguous_us]['Dest']) 
+        all_discarded = discarded_origins.union(discarded_dests)
+        if len(all_discarded) > 0:
+            print(f"Discarded airports outside contiguous US: {sorted(all_discarded)}")
+        
+        final_df = final_df[origin_in_contiguous_us & dest_in_contiguous_us]
     
     final_df = final_df.reset_index()
     final_df = final_df.rename(columns={'index': 'flight_idx'})
@@ -223,8 +245,21 @@ def group_flights_origin_destination(flight_df):
     return flights, origin_airport, destination_airport
 
 
-def create_flight_connection_network(flights, origin_airport, delta_min=30, delta_share_min=60, share=True):
+def create_flight_connection_network(flights, origin_airport, alliance_information=None, delta_min=30, delta_share_min=None, share_type="alliance"):
+    '''
+    improved version which considers alliance information
+    '''
 
+    if share_type not in ['alliance', 'cooperation', 'no-cooperation']:
+        raise ValueError(f"Invalid share type: {share_type}")
+    
+    if share_type in ["alliance", "cooperation"] and alliance_information is None:
+        raise ValueError("Alliance information is required for share type 'alliance' or 'cooperation'")
+
+    if share_type == "cooperation" and delta_share_min is None:
+        raise ValueError("delta_share_min is required for share type 'cooperation'")
+
+    
     fcn = {}
     total_connections = 0
 
@@ -249,18 +284,236 @@ def create_flight_connection_network(flights, origin_airport, delta_min=30, delt
 
                 delta = int((departure - arrival) / 60)
 
+
+                # layer1: adding connection between flights with same carrier
                 if first_carrier == second_carrier:
                     if delta > delta_min:  # this naturally prevents wrong ordering of consecutive flights
                         fcn[first_flight_idx].add(second_flight_idx)
-                        total_connections += 1
+                        # total_connections += 1
 
-                # we can add shared connections as well
-                else:
-                    if share:
-                        if delta > delta_share_min:
+
+
+                if first_carrier != second_carrier and share_type in ["alliance", "cooperation"] and delta > delta_min:
+                    # layer2: adding connections between flights with same alliance
+                    try:
+                        if second_carrier in alliance_information[first_carrier]:
                             fcn[first_flight_idx].add(second_flight_idx)
-                            total_connections += 1 
-    
+                            # total_connections += 1
+                    except:
+                        pass
+                        
+                if first_carrier != second_carrier and share_type == "cooperation" and delta > delta_share_min:
+                    fcn[first_flight_idx].add(second_flight_idx)
+                    # total_connections += 1
+        
+    total_connections = sum(len(connections) for connections in fcn.values())
+
+
+
     print(f'# of total edges in FCN : {total_connections}')
 
     return fcn
+
+
+def reset_flight_index(ontime_df):
+    # reset index and add flight_idx
+    ontime_df.reset_index(inplace=True)
+    ontime_df['flight_idx'] = ontime_df.index
+    ontime_df.drop(['index'], axis=1, inplace=True)
+    
+    if ontime_df['flight_idx'].min()==0:
+        ontime_df['flight_idx']+=1
+
+    ontime_df['flight_idx'] = ontime_df['flight_idx'].astype(int)
+
+    return ontime_df
+
+
+def remove_flights_by_carriers(ontime_df, removing_carriers, reset_index=False):
+    mask = ontime_df['Operating_Airline'].isin(removing_carriers)
+    disrupted_ontime_df = ontime_df[~mask].copy()
+    if reset_index:
+        disrupted_ontime_df = reset_flight_index(disrupted_ontime_df)
+    return disrupted_ontime_df
+
+
+def remove_flights_by_aircrafts(ontime_df, fraction=0.1, reset_index=False):
+    available_aircrafts = list(set(ontime_df['Tail_Number'].unique()))
+    removed_aircrafts = np.random.choice(available_aircrafts, size=int(len(available_aircrafts)*fraction), replace=False)
+    mask = ontime_df['Tail_Number'].isin(removed_aircrafts)
+    disrupted_ontime_df = ontime_df[~mask].copy()
+    if reset_index:
+        disrupted_ontime_df = reset_flight_index(disrupted_ontime_df)
+    return disrupted_ontime_df
+
+
+def remove_flights_by_random(ontime_df, fraction, reset_index=False):
+    disrupted_ontime_df = ontime_df.sample(frac=1-fraction)
+    if reset_index:
+        disrupted_ontime_df = reset_flight_index(disrupted_ontime_df)
+    return disrupted_ontime_df
+
+
+def remove_flights(ontime_df, removal_type, reset_index=False, **kwargs):
+    """
+    Remove flights based on specified removal type and parameters
+    
+    Args:
+        ontime_df: DataFrame containing flight data
+        removal_type: str, one of ["carrier", "flight", "random"]
+        **kwargs: Additional arguments based on removal_type
+            - For "carrier": removing_carriers (list) required
+            - For "flight" or "random": fraction (float) required
+    
+    Returns:
+        DataFrame with flights removed according to specified criteria
+    """
+    if removal_type == "carrier":
+        if "removing_carriers" not in kwargs:
+            raise ValueError("Must provide removing_carriers list for carrier removal")
+        return remove_flights_by_carriers(ontime_df, kwargs["removing_carriers"], reset_index=reset_index)
+        
+    elif removal_type == "aircraft":
+        if "fraction" not in kwargs:
+            raise ValueError("Must provide fraction for flight removal")
+        return remove_flights_by_aircrafts(ontime_df, kwargs["fraction"], reset_index=reset_index)
+        
+    elif removal_type == "random":
+        if "fraction" not in kwargs:
+            raise ValueError("Must provide fraction for random removal") 
+        return remove_flights_by_random(ontime_df, kwargs["fraction"], reset_index=reset_index)
+        
+    else:
+        raise ValueError("removal_type must be one of: ['carrier', 'flight', 'random']")
+
+
+def get_db1b_cooperation_matrix(db1b_df, symmetry=False, halve_self_connections=True, available_carriers=None, normalize=False):
+    """
+    Create cooperation matrix from DB1B data.
+    
+    Args:
+        db1b_df: DataFrame containing DB1B data
+        
+    Returns:
+        db1b_cooperation_matrix: Dictionary containing cooperation counts between carriers
+        db1b_cooperation_matrix_df: DataFrame version of the cooperation matrix
+    """
+    unique_markets = db1b_df['MktID'].unique()
+    db1b_carriers = set()
+    markets = {}
+
+    for uni_market in unique_markets:
+        markets[uni_market] = []
+
+    for row in tqdm(db1b_df.itertuples(index=False), total=len(db1b_df)):
+        mktid = row.MktID
+        origin = row.Origin
+        destination = row.Dest
+        passengers = int(row.Passengers)
+        seq = row.SeqNum
+        carrier = row.OpCarrier  # operating carrier
+        db1b_carriers.add(carrier)
+
+        markets[mktid].append([origin, destination, passengers, seq, carrier])
+
+    # sort each directional markets
+    for mktid in markets:
+        if len(markets[mktid]) > 1:
+            markets[mktid] = sort_flight_legs_v2(markets[mktid])
+
+    db1b_matrix_entries = list(product(db1b_carriers, repeat=2))
+    db1b_cooperation_matrix = {}
+    for entry in db1b_matrix_entries:
+        db1b_cooperation_matrix[entry] = 0
+
+    for mktid in tqdm(markets, total=len(markets)):    
+        if len(markets[mktid]) == 2:
+            carrier1 = markets[mktid][0][4]
+            carrier2 = markets[mktid][1][4]
+            db1b_cooperation_matrix[(carrier1, carrier2)] += markets[mktid][0][2]
+            if symmetry:
+                db1b_cooperation_matrix[(carrier2, carrier1)] += markets[mktid][0][2]
+    
+    if halve_self_connections:
+        for carrier in db1b_carriers:
+            db1b_cooperation_matrix[(carrier, carrier)] = int(db1b_cooperation_matrix[(carrier, carrier)] / 2)
+
+    if available_carriers:
+        db1b_cooperation_matrix = {k: v for k, v in db1b_cooperation_matrix.items() if k[0] in available_carriers and k[1] in available_carriers}
+
+    # Convert dictionary to list of tuples with counts
+    db1b_matrix_entries = [(k[0], k[1], v) for k,v in db1b_cooperation_matrix.items()]
+    # Create DataFrame from list of tuples
+    db1b_cooperation_matrix_df = pd.DataFrame(db1b_matrix_entries, columns=['carrier1', 'carrier2', 'cooperation_count'])
+
+    if normalize:
+        carrier1_sums = db1b_cooperation_matrix_df.groupby('carrier1')['cooperation_count'].sum()
+        # Normalize cooperation_count by dividing by carrier1 sum
+        normalized_df = db1b_cooperation_matrix_df.copy()
+        normalized_df['cooperation_count'] = normalized_df.apply(
+            lambda x: x['cooperation_count'] / carrier1_sums[x['carrier1']], 
+            axis=1
+        )
+
+        return normalized_df
+    
+    return db1b_cooperation_matrix_df
+
+def get_mcp_cooperation_matrix(mcp_data, flights, symmetry=False, halve_self_connections=False):
+    
+    # find available carriers from mcp data
+    available_carriers = set()
+    for itinerary in tqdm(mcp_data, total=len(mcp_data)):
+        list_of_flights = itinerary[-1]
+        if len(list_of_flights) == 2:
+            first_flight = list_of_flights[0]
+            second_flight = list_of_flights[1]
+            carrier1 = flights[first_flight]['carrier']
+            carrier2 = flights[second_flight]['carrier']
+            available_carriers.add(carrier1)
+            available_carriers.add(carrier2)
+    
+    # prepare the cooperation matrix
+    matrix_entries = list(product(available_carriers, repeat=2))
+    cooperation_matrix = {entry: 0 for entry in matrix_entries}
+
+    # fill in the cooperation matrix
+    for itinerary in tqdm(mcp_data, total=len(mcp_data)):
+        list_of_flights = itinerary[-1]
+        if len(list_of_flights) == 2:
+            first_flight = list_of_flights[0]
+            second_flight = list_of_flights[1]
+            carrier1 = flights[first_flight]['carrier']
+            carrier2 = flights[second_flight]['carrier']
+            cooperation_matrix[(carrier1, carrier2)] += 1
+            if symmetry:
+                cooperation_matrix[(carrier2, carrier1)] += 1
+    
+    if halve_self_connections:
+        for carrier in available_carriers:
+            cooperation_matrix[(carrier, carrier)] = int(cooperation_matrix[(carrier, carrier)] / 2)
+
+    # convert dictionary to dataframe
+    matrix_entries = [(k[0], k[1], v) for k,v in cooperation_matrix.items()]
+    cooperation_matrix_df = pd.DataFrame(matrix_entries, columns=['carrier1', 'carrier2', 'cooperation_count'])
+    
+
+    return cooperation_matrix, cooperation_matrix_df
+
+                           
+
+def get_alliance_from_cooperation_matrix(cooperation_matrix_df, threshold=0.1):
+    cooperative_connections = cooperation_matrix_df[cooperation_matrix_df['cooperation_count'] > threshold][['carrier1', 'carrier2']].values.tolist()
+
+    alliance = {}
+    for carrier1, carrier2 in cooperative_connections:
+        if carrier1 != carrier2:
+            if carrier1 not in alliance:
+                alliance[carrier1] = set()
+            alliance[carrier1].add(carrier2)
+
+            if carrier2 not in alliance:
+                alliance[carrier2] = set()
+            alliance[carrier2].add(carrier1)
+
+    return alliance

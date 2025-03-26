@@ -126,7 +126,7 @@ def read_data_file (file_in):
             path = []
             for i in range(7, 7+l):
                 path.append(int(d[i]))
-            path.reverse()
+            path.reverse()  # reverse for chronological order
             data.append([supply, demand, used_seats, cost_path_distance, cost_path_time, cost_path_seats, path])
             if cost_path_time < 0:
                 print (cost_path_time, path)
