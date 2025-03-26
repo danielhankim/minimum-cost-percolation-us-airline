@@ -4,6 +4,8 @@ results/*
 notebooks/.ipynb_checkpoints
 notebooks/old*
 notebooks/dev*
+notebooks/deprecated*
+notebooks/manuscript-SM*
 deprecated_*
 logs/*
 results
