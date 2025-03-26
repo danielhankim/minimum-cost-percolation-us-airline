@@ -58,14 +58,12 @@ Example usage:
 ```bash
 ./min_cost_percolation.out demand.txt flights.txt network.txt results.txt 1
 ```
-```
 
 
 # Misc.
 We also provide Jupyter notebook files which allows you to generate the figures in the main text.
 
-
-# Future README Improvements
+<!-- # Future README Improvements
 
 ## Priority Improvements
 - [ ] Add direct links to data sources once available
@@ -105,3 +103,6 @@ We also provide Jupyter notebook files which allows you to generate the figures 
     - Known limitations
     - Acknowledgments section
     - Related publications/projects
+
+
+ -->
