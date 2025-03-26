@@ -72,13 +72,13 @@ int main (int argc, char **argv) {
 
 
 
-
+  printf("organizing results before MCP process\n");
+  printf("main() ::: D->effective_total: %lld\n", D->effective_total);
   struct result *R = (struct result*)malloc(1*sizeof(struct result));
   allocate_results (R, D);
 
 
-  
-
+  printf("running MCP process\n");
   start = clock();
   minimum_cost_percolation_function (D, G, F, S, R, cost_type);  
   end = clock();

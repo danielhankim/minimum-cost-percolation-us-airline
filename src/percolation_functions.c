@@ -52,6 +52,7 @@ void clean_demand (struct demand *D, struct d_search *S, struct flight *F, struc
 		//printf("%d\n",S->found[0]);
 		reset_variables (S);
 	}
+	printf("in clean_demand() ::: D->effective_total: %lld\n", D->effective_total);
 }
 
 
@@ -72,9 +73,9 @@ int single_step_percolation_model (int origin, int destination, struct d_search 
 
 		//save results
 		R->idx += 1;
-		if(R->idx>R->total) {printf("Exceeded memory results %d %d\n",R->idx,R->total);}
+		if(R->idx>R->total) {printf("Exceeded memory results %lld %lld\n",R->idx,R->total);}
 		R->demanded_pairs[R->idx] = R->demanded_pairs[R->idx-1] + random_geometric ((double)D->effective_total/(double)D->total);
-		R->paths[R->idx] = (int *)realloc(R->paths[R->idx], (S->visited[0]+1)*sizeof(int));
+		R->paths[R->idx] = (unsigned long long *)realloc(R->paths[R->idx], (S->visited[0]+1)*sizeof(unsigned long long));
 		for(i = 0; i <= S->visited[0]; i++) {R->paths[R->idx][i] = S->visited[i];}
 		R->remaining_seats[R->idx] = R->remaining_seats[R->idx-1] - S->visited[0];
 		//cost

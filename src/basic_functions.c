@@ -21,8 +21,8 @@ void print_results (char *filename, struct result *R) {
 	f = fopen(filename,"w");
 	int i, j;
 	for(i = 1; i <= R->idx; i++) {
-		fprintf(f,"%d %g %g\t%g %g %g\t%d",i,R->demanded_pairs[i], (double)R->remaining_seats[i]/(double)R->remaining_seats[0],R->cost[i][0],R->cost[i][1],R->cost[i][2], R->paths[i][0]);
-		for(j = 1; j <= R->paths[i][0]; j++) {fprintf(f," %d",R->paths[i][j]);}
+		fprintf(f,"%d %g %g\t%g %g %g\t%lld",i,R->demanded_pairs[i], (double)R->remaining_seats[i]/(double)R->remaining_seats[0],R->cost[i][0],R->cost[i][1],R->cost[i][2], R->paths[i][0]);
+		for(j = 1; j <= R->paths[i][0]; j++) {fprintf(f," %lld",R->paths[i][j]);}
 		fprintf(f,"\n");
 	}
 	fclose(f);
@@ -30,15 +30,51 @@ void print_results (char *filename, struct result *R) {
 
 
 void allocate_results (struct result *R, struct demand *D) {
-	int i;
+	unsigned long long i;
+
+if (R == NULL || D == NULL) {
+	fprintf(stderr, "Error: NULL pointer passed to allocate_results\n");
+	exit(1);
+}
+
+
 	R->total = D->effective_total;
+	printf("Total pairs: %lld\n", R->total);
 	R->idx = 0;
+
 	R->demanded_pairs = (double *)malloc((R->total+1)*sizeof(double));
+
+if (R->demanded_pairs == NULL) {
+	fprintf(stderr, "Failed to allocate memory for demanded_pairs\n");
+	exit(1);
+}
 	R->demanded_pairs[0] = 0.0;
-	R->paths = (int **)malloc((R->total+1)*sizeof(int *));
-	for(i = 1; i <= R->total; i++) {R->paths[i] = (int *)malloc(1*sizeof(int));}
-	R->remaining_seats = (int *)malloc((R->total+1)*sizeof(int));
+
+	R->paths = (unsigned long long **)malloc((R->total+1)*sizeof(unsigned long long *));
+
+ if (R->paths == NULL) {
+	fprintf(stderr, "Failed to allocate memory for paths\n");
+	free(R->demanded_pairs);
+	exit(1);
+}
+	for(i = 1; i <= R->total; i++) {R->paths[i] = (unsigned long long *)malloc(1*sizeof(unsigned long long));}
+	R->remaining_seats = (unsigned long long *)malloc((R->total+1)*sizeof(unsigned long long));
+if (R->remaining_seats == NULL) {
+	fprintf(stderr, "Failed to allocate memory for remaining_seats\n");
+	free(R->demanded_pairs);
+	free(R->paths);
+	exit(1);
+}
 	R->cost = (double **)malloc((R->total+1)*sizeof(double *));
+
+if (R->cost == NULL) {
+	fprintf(stderr, "Failed to allocate memory for cost\n");
+	free(R->demanded_pairs);
+	free(R->paths);
+	free(R->remaining_seats);
+	exit(1);
+}
+
 	for(i = 1; i <= R->total; i++) {R->cost[i] = (double *)malloc(3*sizeof(double));}
 }
 
@@ -300,9 +336,11 @@ void deallocate_memory_network (struct network* G) {
 //////////////////////////////////////////////////////////
 void read_demand_matrix (char *filename, struct demand* D) {
 	FILE *f;
-	int i, j, d, q, s;
-	unsigned long long total_passengers = 0;  /* total number of passengers*/
-	int total_OD_elements = 0;  /* totla number of OD elements*/
+	int q;
+    unsigned long long i, j, d;  // Changed to match struct's data types
+    unsigned long long s;
+    unsigned long long total_passengers = 0;
+    unsigned long long total_OD_elements = 0;  // Changed to match struct's data type
 	
 	/* read the demand file */
 	/* and count the number of passengers and OD elements */
@@ -310,7 +348,7 @@ void read_demand_matrix (char *filename, struct demand* D) {
 	f = fopen(filename,"r");
 	
 	while(!feof(f)) {
-		q = fscanf(f,"%d %d %d",&i,&j,&d);
+		q = fscanf(f,"%llu %llu %llu",&i,&j,&d);
 		if (q <= 0) {goto exit_file;}
 		total_passengers += d;
 		total_OD_elements += 1;
@@ -321,7 +359,7 @@ void read_demand_matrix (char *filename, struct demand* D) {
 	fclose(f);
 
 	printf("# Total passengers %lld\n",total_passengers);
-	printf("# Total o/d elements %d\n",total_OD_elements); 
+	printf("# Total o/d elements %lld\n",total_OD_elements); 
 	////////////
 
 	/* allocate memories */	
@@ -333,11 +371,15 @@ void read_demand_matrix (char *filename, struct demand* D) {
 	D->vector[0] = 0;  /* index count */
 	D->total = total_passengers;
 	D->elements = total_OD_elements;
+	// D->effective_total = total_passengers;  # we don't need this here. these will be initialized in clean_demand()
+	// D->effective_elements = total_OD_elements;  # we don't need this here. these will be initialized in clean_demand()
 	D->bst = (struct node**)malloc((total_OD_elements+1)*sizeof(struct node*));  /* array of binary search trees (BSTs) */
 	for(i = 0; i <= total_OD_elements; i++) D->bst[i] = NULL;
 	D->tmp_vector = (unsigned long long *)malloc((total_passengers+1)*sizeof(unsigned long long));
 	D->buffer = (unsigned long long *)malloc((total_passengers+1)*sizeof(unsigned long long));
 	////////////
+
+	printf("read_demand_matrix() ::: D->effective_total: %lld\n", D->effective_total);
 
 
 	/* we start filling in the fields by reading the demand file again  */
@@ -345,7 +387,7 @@ void read_demand_matrix (char *filename, struct demand* D) {
 	f = fopen(filename,"r");
 
 	while(!feof(f)) {
-		q = fscanf(f,"%d %d %d",&i,&j,&d);
+		q = fscanf(f,"%llu %llu %llu",&i,&j,&d);
 		if (q <= 0) {goto exit_file1;}
 		
 		total_OD_elements += 1;
@@ -471,6 +513,5 @@ void remove_pair_from_demand(unsigned long long q, struct demand* D) {
 
 	free_tree(D->bst[q]);
 	D->bst[q] = NULL;
-
   
 }

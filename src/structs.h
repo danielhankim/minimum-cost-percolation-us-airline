@@ -65,10 +65,10 @@ struct d_search{
 
 
 struct result{
-	int idx;
-	int total;
+	unsigned long long idx;
+	unsigned long long total;
 	double *demanded_pairs;
-	int **paths;
-	int *remaining_seats;
+	unsigned long long **paths;
+	unsigned long long *remaining_seats;
 	double **cost;
 };
