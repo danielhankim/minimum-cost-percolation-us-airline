@@ -20,12 +20,48 @@ This repository contains the code for
 
 # How to retrieve the publicly available data
 Our work rely on publicly available data from various sources:
-- [On-Time Performance Data (flight schedule data)](TBD_URL)
-- [DB1B Data (sold tickets data)](TBD_URL)
-- [SEDAC Data(population data)](TBD_URL)
-- [FAA Aircraft database](TBD_URL)
-- [Openflight database](TBD_URL)
+- [Airline On-Time Performance Data (flight schedule data)](https://www.transtats.bts.gov/Tables.asp?QO_VQ=EFD&QO_anzr=Nv4yv0r%FDb0-gvzr%FDcr4s14zn0pr%FDQn6n&QO_fu146_anzr=b0-gvzr)
+- [DB1B Data (sold tickets data)](https://www.transtats.bts.gov/Tables.asp?QO_VQ=EFI&QO_anzr=Nv4yv0r%FDb4vtv0%FDn0q%FDQr56v0n6v10%FDf748rB%FD%FLQOEO%FM&QO_fu146_anzr=b4vtv0%FDn0q%FDQr56v0n6v10%FDf748rB)
+- [FAA Aircraft Database](https://registry.faa.gov/aircraftinquiry)
+- [OpenFlights Database](https://openflights.org/data.php)
+- [Census Population Data](https://www.earthdata.nasa.gov/data/catalog/sedac-ciesin-sedac-gpwv4-apdens-wpp-2015-r11-4.11)
 
+# Installation and Requirements
+
+## Environment Setup
+```python
+# Create and activate conda environment
+conda env create -f environment.yml
+conda activate mcp-us-airline
+```
+
+## Required Python Packages
+The following main packages are required (all dependencies are handled by conda):
+- Python 3.10
+- numpy >= 1.26
+- pandas >= 2.2
+- matplotlib >= 3.8
+- seaborn >= 0.13
+- networkx >= 3.2
+- geopandas >= 0.14
+- folium >= 0.15
+- jupyter >= 1.0
+- ipython >= 8.21
+- scikit-learn >= 1.4
+- pulp >= 2.7
+- scipy >= 1.12
+
+## Install Project Library
+```
+# From the root directory of the project
+pip install -e .
+```
+
+<!-- I'm not sure if this is necessary though... -->
+## System Requirements 
+- Python 3.10 or higher
+- C compiler (gcc recommended) for MCP model compilation
+- At least 32GB RAM recommended for large dataset processing
 
 # How to generate the input files for the minimum-cost-percolation (MCP) model
 The raw data retrieved from public sources should be preprocessed before running the MCP model. We provide a Jupyter notebook file `generate-input-files.ipynb` which does the job. To properly run this notebook, you need to install this library `mcp_us_airline` from this repository.
@@ -61,12 +97,12 @@ Example usage:
 
 
 # Misc.
-We also provide Jupyter notebook files which allows you to generate the figures in the main text.
+We also provide Jupyter notebook files which allow you to generate the figures in the main text.
 
 <!-- # Future README Improvements
 
 ## Priority Improvements
-- [ ] Add direct links to data sources once available
+- [x] Add direct links to data sources once available
 - [ ] Include paper citation details after publication
 - [ ] Add example input/output file formats
 - [ ] Document expected runtime and memory requirements
