@@ -4,16 +4,24 @@ channels:
   - defaults
 dependencies:
   - python=3.10
-  - numpy>=1.26
-  - pandas>=2.2
-  - matplotlib>=3.8
-  - seaborn>=0.13
-  - networkx>=3.2
-  - geopandas>=0.14
-  - folium>=0.15
-  - jupyter>=1.0
-  - ipython>=8.21
-  - scikit-learn>=1.4
-  - pulp>=2.7
-  - scipy>=1.12
-  - pip>=24.0
+  - geopandas=0.14.4
+  # - fiona>=1.9.5  # Added with exact version
+  - seaborn
+  - networkx
+  - pandas
+  - tqdm
+  - rasterio
+  - geopy
+  - timezonefinder
+  - pytz
+  - jupyterlab
+  - openpyxl
+  - gdal
+  - fa2
+  - numba
+  # Development dependencies
+  - pytest
+  - black
+  - isort
+  - flake8
+  - pip
