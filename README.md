@@ -29,13 +29,29 @@ Our work rely on publicly available data from various sources:
 # Installation and Requirements
 
 ## Environment Setup
-```python
-# Create and activate conda environment
+There are two ways to set up the environment:
+
+### Option 1: Using environment.yml (Recommended)
+```bash
+# Create and activate conda environment with all dependencies
 conda env create -f environment.yml
 conda activate mcp-us-airline
+
+# Install the project package
+pip install -e .
 ```
 
-## Required Python Packages
+### Option 2: Manual Installation
+```bash
+# Create and activate a new conda environment
+conda create -n mcp-us-airline python=3.10
+conda activate mcp-us-airline
+
+# Install the project package with all dependencies
+pip install -e .
+```
+
+<!-- ## Required Python Packages
 The following main packages are required (all dependencies are handled by conda):
 - Python 3.10
 - numpy >= 1.26
@@ -49,13 +65,13 @@ The following main packages are required (all dependencies are handled by conda)
 - ipython >= 8.21
 - scikit-learn >= 1.4
 - pulp >= 2.7
-- scipy >= 1.12
+- scipy >= 1.12 -->
 
-## Install Project Library
+<!-- ## Install Project Library
 ```
 # From the root directory of the project
 pip install -e .
-```
+``` -->
 
 <!-- I'm not sure if this is necessary though... -->
 ## System Requirements 
