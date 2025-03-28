@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=64.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mcp_us_airline"
+version = "0.1"
+description = "Minimum Cost Percolation for US Airline Network"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Minsuk Kim", email = "mk139@iu.edu"},
+]
+dependencies = [
+    "geopandas==0.14.4",
+    "seaborn",
+    "networkx",
+    "pandas",
+    "tqdm",
+    "rasterio",
+    "geopy",
+    "timezonefinder",
+    "pytz",
+    "openpyxl",
+    "fa2",
+    "numba"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "black",
+    "isort",
+    "flake8"
+]
+
+[project.urls]
+Repository = "https://github.com/danielhankim/minimum-cost-percolation-us-airline"
