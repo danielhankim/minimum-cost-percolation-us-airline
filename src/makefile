@@ -1,70 +1,14 @@
-# options for icc
-#    axW, xW: Xeon,Pentium 4, Pentium M
-#    axi, xi: Pentium pro, pentium II
-#    axK, xK: pentium III
-#    tpp7: Pentium 4, Xeon
-#    tpp6: Pentium II, III, Pro
-#    mcpu=pentiumpro: Pentium Pro, Pentium II, Pentium III
-#    mcpu=pentium4: Pentium 4 (default)
-#CC=gcc
-OT=-O3 -tpp7 -axW -xW -unroll0
-OT=-ffast-math -g -O3
+OT=-ffast-math -O3
 OP=$(OT)
 LOP=-lm -o
-#LOP=-lm -o
-
-# options for mpi
-#CC=hcc
-#CC=mpicc
-#OT=-O3 -tpp6 -axi -xi -unroll0
-#OP=$(OT)
-#LOP=-lm -lmpi -o
-
-# Options for gcc
-#CC=gcc #-march=native
-#OT=-O3 -funroll-all-loops -fexpensive-optimizations 
-#OP=$(OT)
-#LOP=-lm -lgsl -lgslcblas -o
-
-# For debugging with x86
-#CC=gcc
-#OT=-g -Wall -rdynamic
-#OP= $(OT)
-#LOP=-lm -o
-# For profiling with x86
-#CC=gcc
-#OT=-pg -Wall
-#OP=$(OT)
-#LOP=-lm -o
-
-# For debugging on SUNOS
-#CC=gcc 
-#OT=-g -Wall 
-#LOP=-lm -o
-
-# For debugging with Efence
-#CC=gcc -march=i686
-#OT=-g -Wall 
-#OP=$(OT)
-#LOP=-lm -lefence -o
-##LOP=-L/afs/nd.edu/user26/syook/util/local/lib -lm -lefence -o
-
-# For SUN
-#CC=cc
-#OT=-fast -xunroll=0 xtarget=ultra2 -xarch=v8 -xO3
-####OT=-xunroll=0 -xO3
-#OP=$(OT)
-#LOP=-lm -o
 
 CHDR=./
 CSRC=./
 MSRC=./
 
 MAIN=min_cost_percolation
-VER=
-#SIZE=L128
 
-EXE=$(MAIN)$(VER)$(SIZE)
+EXE=$(MAIN)
 TAG=$(EXE).out
 
 OBJ=$(MAIN).o mt19937-64.o basic_functions.o binary_search_tree.o percolation_functions.o heap.o
