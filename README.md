@@ -1,10 +1,10 @@
 # Modeling resource consumption in the US air transportation system via minimum-cost percolation
 
 This repository contains the code for
-- Minsuk Kim, C. Tyler Diggans, and Filippo Radicchi, [Modeling resource consumption in the US air transportation system via minimum-cost percolation](TBD_URL), Journal XXXX.
-- [Preprint (arXiv)](TBD_URL) (not there yet)
+- Minsuk Kim, C. Tyler Diggans, and Filippo Radicchi, [Modeling resource consumption in the US air transportation system via minimum-cost percolation](TBD_URL), (Journal Information to be added)
+- [Preprint (arXiv)](TBD_URL) (To be added)
 
-- BibTex entry: To be added
+- BibTex entry: (To be added)
     <!-- ```
     @article{kim2024shortest,
     title={Shortest-Path Percolation on Random Networks},
