@@ -6,7 +6,7 @@ notebooks/old*
 notebooks/dev*
 notebooks/deprecated*
 notebooks/manuscript-SM*
-notebooks/manuscript-rebuttal*
+notebooks/rebuttal*
 deprecated_*
 logs/*
 results
