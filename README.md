@@ -1,7 +1,7 @@
 # Modeling resource consumption in the US air transportation system via minimum-cost percolation
 
 This repository contains the code for
-- Minsuk Kim, C. Tyler Diggans, and Filippo Radicchi, [Modeling resource consumption in the US air transportation system via minimum-cost percolation]([TBD_URL](https://www.nature.com/articles/s41467-025-63489-w)), Nature Communications
+- Minsuk Kim, C. Tyler Diggans, and Filippo Radicchi, [Modeling resource consumption in the US air transportation system via minimum-cost percolation](https://www.nature.com/articles/s41467-025-63489-w), Nature Communications
 **16**, 8105 (2025).
 - [Preprint (arXiv)](https://arxiv.org/abs/2504.04245)
 
@@ -18,9 +18,7 @@ This repository contains the code for
     doi = {10.1038/s41467-025-63489-w},
     url = {https://doi.org/10.1038/s41467-025-63489-w},
     issn = {2041-1723}
-}
-    ```
-
+    }
 # How to retrieve the publicly available data
 Our work rely on publicly available data from various sources:
 - [Airline On-Time Performance Data (flight schedule data)](https://www.transtats.bts.gov/Tables.asp?QO_VQ=EFD&QO_anzr=Nv4yv0r%FDb0-gvzr%FDcr4s14zn0pr%FDQn6n&QO_fu146_anzr=b0-gvzr)
